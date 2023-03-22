@@ -55,20 +55,20 @@ const compareReports = async (url1, url2) => {
     console.log("error on fs statement", err);
   }
 
-  results.url1.FCP = data1["first-contentful-paint"].numericValue;
-  results.url1.SI = data1["speed-index"].numericValue;
-  results.url1.LCP = data1["largest-contentful-paint"].numericValue;
-  results.url1.TTI = data1["interactive"].numericValue;
-  results.url1.TBT = data1["total-blocking-time"].numericValue;
-  results.url1.CLS = data1["cumulative-layout-shift"].numericValue;
+  results.url1.FCP = data1["first-contentful-paint"].numericValue === undefined ? "0" : JSON.stringify(data1["first-contentful-paint"].numericValue);
+  results.url1.SI = data1["speed-index"].numericValue === undefined ? "0" : JSON.stringify(data1["speed-index"].numericValue);
+  results.url1.LCP = data1["largest-contentful-paint"].numericValue === undefined ? "0" : JSON.stringify(data1["largest-contentful-paint"].numericValue);
+  results.url1.TTI = data1["interactive"].numericValue === undefined ? "0" : JSON.stringify(data1["interactive"].numericValue);
+  results.url1.TBT = data1["total-blocking-time"].numericValue === undefined ? "0" : JSON.stringify(data1["total-blocking-time"].numericValue);
+  results.url1.CLS = data1["cumulative-layout-shift"].numericValue === undefined ? "0" : JSON.stringify(data1["cumulative-layout-shift"].numericValue);
 
   // Get CLS, SI, and LCP for URL2
-  results.url2.FCP = data2["first-contentful-paint"].numericValue;
-  results.url2.SI = data2["speed-index"].numericValue;
-  results.url2.LCP = data2["largest-contentful-paint"].numericValue;
-  results.url2.TTI = data2["interactive"].numericValue;
-  results.url2.TBT = data2["total-blocking-time"].numericValue;
-  results.url2.CLS = data2["cumulative-layout-shift"].numericValue;
+  results.url2.FCP = data2["first-contentful-paint"].numericValue === undefined ? "0" : JSON.stringify(data2["first-contentful-paint"].numericValue);
+  results.url2.SI = data2["speed-index"].numericValue === undefined ? "0" : JSON.stringify(data2["speed-index"].numericValue);
+  results.url2.LCP = data2["largest-contentful-paint"].numericValue === undefined ? "0" : JSON.stringify(data2["largest-contentful-paint"].numericValue);
+  results.url2.TTI = data2["interactive"].numericValue === undefined ? "0" : JSON.stringify(data2["interactive"].numericValue);
+  results.url2.TBT = data2["total-blocking-time"].numericValue === undefined ? "0" : JSON.stringify(data2["total-blocking-time"].numericValue);
+  results.url2.CLS = data2["cumulative-layout-shift"].numericValue === undefined ? "0" : JSON.stringify(data2["cumulative-layout-shift"].numericValue);
 
   return results;
 };
@@ -99,12 +99,12 @@ const runCompare = async (times) => {
     // Output comparison results
     const data = [
       ["Type", "Old", "Revamp"],
-      ["First Contentful Paint", JSON.stringify(results.url1.FCP), JSON.stringify(results.url2.FCP)],
-      ["Speed Index", JSON.stringify(results.url1.SI), JSON.stringify(results.url2.SI)],
-      ["Largest Contentful Paint", JSON.stringify(results.url1.LCP), JSON.stringify(results.url2.LCP)],
-      ["Time to Interactive", JSON.stringify(results.url1.TTI), JSON.stringify(results.url2.TTI)],
-      ["Total Blocking Time", JSON.stringify(results.url1.TBT), JSON.stringify(results.url2.TBT)],
-      ["Cumulative Layout Shift", JSON.stringify(results.url1.CLS), JSON.stringify(results.url2.CLS)],
+      ["First Contentful Paint", results.url1.FCP, results.url2.FCP],
+      ["Speed Index", results.url1.SI, results.url2.SI],
+      ["Largest Contentful Paint", results.url1.LCP, results.url2.LCP],
+      ["Time to Interactive", results.url1.TTI, results.url2.TTI],
+      ["Total Blocking Time", results.url1.TBT, results.url2.TBT],
+      ["Cumulative Layout Shift", results.url1.CLS, results.url2.CLS],
     ];
 
     const formattedRows = data.map((row) => `${row[0].toString().padEnd(30)} ${row[1].toString().padEnd(20)} ${row[2].padEnd(15)}`);
@@ -115,7 +115,7 @@ const runCompare = async (times) => {
   // console.log("total", accumulatedResults);
   const totals = accumulatedResults.reduce((acc, curr) => {
     for (const [key, value] of Object.entries(curr)) {
-      acc[key] = (acc[key] || 0) + value;
+      acc[key] = parseFloat(acc[key] || 0) + parseFloat(value);
     }
     return acc;
   }, {});
@@ -129,4 +129,4 @@ const runCompare = async (times) => {
   console.log("Cumulative Layout Shift", totals.CLS1 / times - totals.CLS2 / times);
 };
 
-runCompare(5);
+runCompare(2);
