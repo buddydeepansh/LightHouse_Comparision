@@ -5,6 +5,7 @@ import chromeLauncher from "chrome-launcher";
 
 import fs from "fs";
 
+// function to run light house report for a single url.
 const runLighthouse = async (url) => {
   const chrome = await chromeLauncher.launch();
   const options = {
@@ -29,9 +30,12 @@ const runLighthouse = async (url) => {
   return runnerResult.lhr;
 };
 
+// function to compare reports of 2 light house results
 const compareReports = async (url1, url2) => {
   const report1 = await runLighthouse(url1);
   const report2 = await runLighthouse(url2);
+
+  // storing both reports Response
   const results = {
     url1: { FCP: null, CLS: null, SI: null, TTI: null, TBT: null, LCP: null },
     url2: { FCP: null, CLS: null, SI: null, TTI: null, TBT: null, LCP: null },
@@ -40,6 +44,8 @@ const compareReports = async (url1, url2) => {
   // Get CLS, SI, and LCP for URL1
   const data1 = report1.audits;
   const data2 = report2.audits;
+
+  // saving both reports in json files for testing purposes
   const filename1 = "audits1.json";
   const filename2 = "audits2.json";
   // try {
@@ -55,6 +61,7 @@ const compareReports = async (url1, url2) => {
   //   console.log("error on fs statement", err);
   // }
 
+  // converting the numeric value to string for display purpose
   results.url1.FCP = data1["first-contentful-paint"].numericValue === undefined ? "0" : JSON.stringify(data1["first-contentful-paint"].numericValue);
   results.url1.SI = data1["speed-index"].numericValue === undefined ? "0" : JSON.stringify(data1["speed-index"].numericValue);
   results.url1.LCP = data1["largest-contentful-paint"].numericValue === undefined ? "0" : JSON.stringify(data1["largest-contentful-paint"].numericValue);
@@ -75,9 +82,9 @@ const compareReports = async (url1, url2) => {
 
 // Run the comparison
 const runCompare = async (times) => {
-  const timesCopy = times;
-  const accumulatedResults = [];
-  let sucessArray = [];
+  const timesCopy = times; //creating a copy which will help in clearing success.json if required.
+  const accumulatedResults = []; //storing all data
+  let sucessArray = []; //for resume process if any data got from previous json will be stored in this.
   let readData;
   if (fs.existsSync("success.json")) {
     readData = fs.readFileSync("success.json", { encoding: "utf8", flag: "r" });
@@ -109,6 +116,8 @@ const runCompare = async (times) => {
       });
     });
   }
+
+  // below loop will run only if previous json contains lesser or no results as per total reports required.
   for (let i = 0; i < times; i++) {
     let results = await compareReports("https://www.iciciprulife.com/testing/child-insurance/smart-kid-child-savings-plan-calculator.html", "https://www.iciciprulife.com/testing/child-insurance/smart-kid-child-savings-plan-calculator-revamp.html");
     await sucessArray.push(results);
