@@ -75,16 +75,39 @@ const compareReports = async (url1, url2) => {
 
 // Run the comparison
 const runCompare = async (times) => {
+  const timesCopy = times;
   const accumulatedResults = [];
   let sucessArray = [];
-  let readData = fs.readFileSync("success.json", { encoding: "utf8", flag: "r" });
-  readData = JSON.parse(readData);
+  let readData;
+  if (fs.existsSync("success.json")) {
+    readData = fs.readFileSync("success.json", { encoding: "utf8", flag: "r" });
+    readData = readData.length > 0 ? JSON.parse(readData) : [];
+  } else {
+    readData = [];
+  }
 
   if (readData.length > 0) {
-    readData[0].map((item) => {
+    readData.map((item) => {
       sucessArray.push(item);
     });
     times = sucessArray.length >= times ? 0 : times - sucessArray.length;
+    sucessArray.map((results) => {
+      accumulatedResults.push({
+        FCP1: results.url1.FCP,
+        SI1: results.url1.SI,
+        LCP1: results.url1.LCP,
+        TTI1: results.url1.TTI,
+        TBT1: results.url1.TBT,
+        CLS1: results.url1.CLS,
+
+        FCP2: results.url2.FCP,
+        SI2: results.url2.SI,
+        LCP2: results.url2.LCP,
+        TTI2: results.url2.TTI,
+        TBT2: results.url2.TBT,
+        CLS2: results.url2.CLS,
+      });
+    });
   }
   for (let i = 0; i < times; i++) {
     let results = await compareReports("https://www.iciciprulife.com/testing/child-insurance/smart-kid-child-savings-plan-calculator.html", "https://www.iciciprulife.com/testing/child-insurance/smart-kid-child-savings-plan-calculator-revamp.html");
@@ -130,7 +153,7 @@ const runCompare = async (times) => {
     console.log(formattedRows.join("\n"));
     console.log("\n");
   }
-  // console.log("total", accumulatedResults);
+
   const totals = accumulatedResults.reduce((acc, curr) => {
     for (const [key, value] of Object.entries(curr)) {
       acc[key] = parseFloat(acc[key] || 0) + parseFloat(value);
@@ -138,9 +161,8 @@ const runCompare = async (times) => {
     return acc;
   }, {});
 
-  console.log(totals);
   for (let key in totals) {
-    totals[key] = totals[key] / times;
+    totals[key] = totals[key] / accumulatedResults.length;
   }
   totals["FCPStatus"] = totals.FCP1 > totals.FCP2 ? `Good ${100 - (totals.FCP2 / totals.FCP1) * 100}` : `BAD ${100 - (totals.FCP1 / totals.FCP2) * 100}`;
   totals["SIStatus"] = totals.SI1 > totals.SI2 ? `Good ${100 - (totals.SI2 / totals.SI1) * 100}` : `BAD ${(totals.SI1 / totals.SI2) * 100}`;
@@ -154,6 +176,11 @@ const runCompare = async (times) => {
   console.log("Time to Interactive", totals.TTI1, totals.TTI2, totals.TTI1 - totals.TTI2, totals.TTIStatus);
   console.log("Total Blocking Time", totals.TBT1, totals.TBT2, totals.TBT1 - totals.TBT2, totals.TBTStatus);
   console.log("Cumulative Layout Shift", totals.CLS1, totals.CLS2, totals.CLS1 - totals.CLS2, totals.CLSStatus);
+
+  if (timesCopy === accumulatedResults.length) {
+    fs.writeFileSync("success.json", "");
+    console.log("Success.json is cleared");
+  }
 };
 
-runCompare(5);
+runCompare(1);
