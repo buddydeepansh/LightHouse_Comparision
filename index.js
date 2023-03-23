@@ -121,12 +121,21 @@ const runCompare = async (times) => {
   }, {});
 
   console.log(totals);
-  console.log("First Contentful Paint", totals.FCP1 / times - totals.FCP2 / times);
-  console.log("Speed Index", totals.SI1 / times - totals.SI2 / times);
-  console.log("Largest Contentful Paint", totals.LCP1 / times - totals.LCP2 / times);
-  console.log("Time to Interactive", totals.TTI1 / times - totals.TTI2 / times);
-  console.log("Total Blocking Time", totals.TBT1 / times - totals.TBT2 / times);
-  console.log("Cumulative Layout Shift", totals.CLS1 / times - totals.CLS2 / times);
+  for (let key in totals) {
+    totals[key] = totals[key] / times;
+  }
+  totals["FCPStatus"] = totals.FCP1 > totals.FCP2 ? `Good ${100 - (totals.FCP2 / totals.FCP1) * 100}` : `BAD ${100 - (totals.FCP1 / totals.FCP2) * 100}`;
+  totals["SIStatus"] = totals.SI1 > totals.SI2 ? `Good ${100 - (totals.SI2 / totals.SI1) * 100}` : `BAD ${(totals.SI1 / totals.SI2) * 100}`;
+  totals["LCPStatus"] = totals.LCP1 > totals.LCP2 ? `Good ${100 - (totals.LCP2 / totals.LCP1) * 100}` : `BAD ${100 - (totals.LCP1 / totals.LCP2) * 100}`;
+  totals["TTIStatus"] = totals.TTI1 > totals.TTI2 ? `Good ${100 - (totals.TTI2 / totals.TTI1) * 100}` : `BAD ${100 - (totals.TTI1 / totals.TTI2) * 100}`;
+  totals["TBTStatus"] = totals.TBT1 > totals.TBT2 ? `Good ${100 - (totals.TBT2 / totals.TBT1) * 100}` : `BAD ${100 - (totals.TBT1 / totals.TBT2) * 100}`;
+  totals["CLSStatus"] = totals.CLS1 > totals.CLS2 ? `Good ${1 - (totals.CLS2 / totals.CLS1) }` : `BAD ${1 - (totals.CLS1 / totals.CLS2) * 1}`;
+  console.log("First Contentful Paint", totals.FCP1, totals.FCP2, totals.FCP1 - totals.FCP2, totals.FCPStatus);
+  console.log("Speed Index", totals.SI1, totals.SI2, totals.SI1 - totals.SI2, totals.SIStatus);
+  console.log("Largest Contentful Paint", totals.LCP1, totals.LCP2, totals.LCP1 - totals.LCP2, totals.LCPStatus);
+  console.log("Time to Interactive", totals.TTI1, totals.TTI2, totals.TTI1 - totals.TTI2, totals.TTIStatus);
+  console.log("Total Blocking Time", totals.TBT1, totals.TBT2, totals.TBT1 - totals.TBT2, totals.TBTStatus);
+  console.log("Cumulative Layout Shift", totals.CLS1, totals.CLS2, totals.CLS1 - totals.CLS2, totals.CLSStatus);
 };
 
-runCompare(2);
+runCompare(3);
