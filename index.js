@@ -42,18 +42,18 @@ const compareReports = async (url1, url2) => {
   const data2 = report2.audits;
   const filename1 = "audits1.json";
   const filename2 = "audits2.json";
-  try {
-    fs.writeFileSync(filename1, JSON.stringify(data1), (err) => {
-      if (err) throw err;
-      console.log(`Audits data written to ${filename1}`);
-    });
-    fs.writeFileSync(filename2, JSON.stringify(data2), (err) => {
-      if (err) throw err;
-      console.log(`Audits data written to ${filename1}`);
-    });
-  } catch (err) {
-    console.log("error on fs statement", err);
-  }
+  // try {
+  //   fs.writeFileSync(filename1, JSON.stringify(data1), (err) => {
+  //     if (err) throw err;
+  //     console.log(`Audits data written to ${filename1}`);
+  //   });
+  //   fs.writeFileSync(filename2, JSON.stringify(data2), (err) => {
+  //     if (err) throw err;
+  //     console.log(`Audits data written to ${filename1}`);
+  //   });
+  // } catch (err) {
+  //   console.log("error on fs statement", err);
+  // }
 
   results.url1.FCP = data1["first-contentful-paint"].numericValue === undefined ? "0" : JSON.stringify(data1["first-contentful-paint"].numericValue);
   results.url1.SI = data1["speed-index"].numericValue === undefined ? "0" : JSON.stringify(data1["speed-index"].numericValue);
@@ -76,9 +76,27 @@ const compareReports = async (url1, url2) => {
 // Run the comparison
 const runCompare = async (times) => {
   const accumulatedResults = [];
+  let sucessArray = [];
+  let readData = fs.readFileSync("success.json", { encoding: "utf8", flag: "r" });
+  readData = JSON.parse(readData);
 
+  if (readData.length > 0) {
+    readData[0].map((item) => {
+      sucessArray.push(item);
+    });
+    times = sucessArray.length >= times ? 0 : times - sucessArray.length;
+  }
   for (let i = 0; i < times; i++) {
     let results = await compareReports("https://www.iciciprulife.com/testing/child-insurance/smart-kid-child-savings-plan-calculator.html", "https://www.iciciprulife.com/testing/child-insurance/smart-kid-child-savings-plan-calculator-revamp.html");
+    await sucessArray.push(results);
+    try {
+      fs.writeFileSync("success.json", JSON.stringify(sucessArray), (err) => {
+        if (err) throw err;
+        console.log(`Sucess data error to sucess.json`);
+      });
+    } catch (err) {
+      console.log("error on fs statement sucess array write file", err);
+    }
 
     accumulatedResults.push({
       FCP1: results.url1.FCP,
@@ -129,7 +147,7 @@ const runCompare = async (times) => {
   totals["LCPStatus"] = totals.LCP1 > totals.LCP2 ? `Good ${100 - (totals.LCP2 / totals.LCP1) * 100}` : `BAD ${100 - (totals.LCP1 / totals.LCP2) * 100}`;
   totals["TTIStatus"] = totals.TTI1 > totals.TTI2 ? `Good ${100 - (totals.TTI2 / totals.TTI1) * 100}` : `BAD ${100 - (totals.TTI1 / totals.TTI2) * 100}`;
   totals["TBTStatus"] = totals.TBT1 > totals.TBT2 ? `Good ${100 - (totals.TBT2 / totals.TBT1) * 100}` : `BAD ${100 - (totals.TBT1 / totals.TBT2) * 100}`;
-  totals["CLSStatus"] = totals.CLS1 > totals.CLS2 ? `Good ${1 - (totals.CLS2 / totals.CLS1) }` : `BAD ${1 - (totals.CLS1 / totals.CLS2) * 1}`;
+  totals["CLSStatus"] = totals.CLS1 > totals.CLS2 ? `Good ${1 - totals.CLS2 / totals.CLS1}` : `BAD ${1 - (totals.CLS1 / totals.CLS2) * 1}`;
   console.log("First Contentful Paint", totals.FCP1, totals.FCP2, totals.FCP1 - totals.FCP2, totals.FCPStatus);
   console.log("Speed Index", totals.SI1, totals.SI2, totals.SI1 - totals.SI2, totals.SIStatus);
   console.log("Largest Contentful Paint", totals.LCP1, totals.LCP2, totals.LCP1 - totals.LCP2, totals.LCPStatus);
@@ -138,4 +156,4 @@ const runCompare = async (times) => {
   console.log("Cumulative Layout Shift", totals.CLS1, totals.CLS2, totals.CLS1 - totals.CLS2, totals.CLSStatus);
 };
 
-runCompare(3);
+runCompare(5);
